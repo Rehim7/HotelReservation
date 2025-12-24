@@ -1,0 +1,84 @@
+package com.example.hotelreservationsystem.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
+
+@Data
+@Entity
+@Table(name = "Users")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class User implements UserDetails {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+    @Column(name = "user_names",nullable = false)
+    private String username;
+    @Column(name = "Emails",nullable = false)
+    private String email;
+    @Column(name = "Passwords",nullable = false)
+    private String password;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "User_Roles",nullable = false)
+    private Roles userRole;
+
+    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private List<UserOpinions> userOpinions;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Hotel ownedHotel;
+
+
+    @OneToMany(targetEntity = Room.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private List<Room> rooms;
+
+
+    @OneToOne(targetEntity = Card.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private Card card;
+
+    @OneToOne(targetEntity = Ticket.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private Ticket ticket;
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(userRole.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    private boolean enabled = true; // Susmaya görə true verin
+
+    @Override
+    public boolean isEnabled() {
+        return this.enabled;
+    }
+}
