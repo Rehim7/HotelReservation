@@ -49,8 +49,8 @@ public class User implements UserDetails {
     @OneToOne(targetEntity = Ticket.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     private Ticket ticket;
 
-    @Column(name = "enabled", nullable = false)
-    private boolean enabled = true;
+    @jakarta.persistence.Transient
+    private boolean enabled = true; // TODO: Remove @Transient and add @Column after running migration.sql
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
