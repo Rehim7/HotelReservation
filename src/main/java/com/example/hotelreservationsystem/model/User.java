@@ -49,6 +49,8 @@ public class User implements UserDetails {
     @OneToOne(targetEntity = Ticket.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     private Ticket ticket;
 
+    @Column(name = "enabled", nullable = false)
+    private boolean enabled = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -74,8 +76,6 @@ public class User implements UserDetails {
     public boolean isCredentialsNonExpired() {
         return true;
     }
-
-    private boolean enabled = true; // Susmaya görə true verin
 
     @Override
     public boolean isEnabled() {

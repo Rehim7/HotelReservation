@@ -20,27 +20,32 @@ public class CardController {
     }
 
     @PostMapping("/createCard")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_HOTELOWNER')")
     public CardResponse createCard(@Valid @RequestBody CardRequest cardRequest) {
         return cardService.createCard(cardRequest);
     }
 
     @DeleteMapping("/deleteCard/{cardId}")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public void deleteCard(@PathVariable("cardId") Long cardId) {
         cardService.deleteCard(cardId);
     }
 
     @GetMapping("/getCardById/{cardId}")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public Card getCardById(@PathVariable("cardId") Long cardId) {
         return cardService.getCardById(cardId);
     }
 
     @PostMapping("/increaseCardBalance/{cardId}/{amountToUpdate}")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public CardResponse increaseCardBalance( @RequestBody String cardHolderName,@PathVariable Long cardId,@PathVariable Long amountToUpdate) {
         return cardService.increaseCardBalance(cardId,cardHolderName,amountToUpdate);
     }
 
 
     @PostMapping("/decreaseCardBalance/{cardId}/{amountToUpdate}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public CardResponse decreaseCardBalance( @RequestBody String cardHolderName,@PathVariable Long cardId,@PathVariable Long amountToUpdate) {
         return cardService.decreaseCardBalance(cardId,cardHolderName,amountToUpdate);
     }

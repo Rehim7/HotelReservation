@@ -29,7 +29,7 @@ public class RoomController {
     }
 
     @PostMapping("/createRoom")
-    @PreAuthorize("hasRole('HOTELOWNER')")
+    @PreAuthorize("hasRole('ROLE_HOTELOWNER')")
     public RoomResponse createRoom(@RequestBody RoomRequest request) {
         return roomService.createRoom(request);
     }
@@ -46,6 +46,7 @@ public class RoomController {
     }
 
     @GetMapping("/getAllRooms")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_HOTELOWNER')")
     public List<RoomResponse> getAllRooms() {
         return roomService.findAll();
     }
@@ -79,6 +80,7 @@ public class RoomController {
     }
 
     @PatchMapping("/rating/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_HOTELOWNER')")
     public ResponseEntity<Double> calculateRoomAverageRating(@PathVariable Long id) {
         return ResponseEntity.ok(roomService.calculateRoomAverageRating(id));
     }

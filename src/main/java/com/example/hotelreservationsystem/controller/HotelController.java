@@ -41,6 +41,7 @@ public class HotelController {
     }
 
     @GetMapping("/getHotelById/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_HOTELOWNER')")
     public Hotel getHotelById(@PathVariable("id") Long id) {
         return hotelService.findById(id);
     }
@@ -56,6 +57,7 @@ public class HotelController {
         hotelService.userOpinionSetToHotel(id,userOpininonRequest);
     }
     @PatchMapping("/rating/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_HOTELOWNER')")
     public ResponseEntity<Double> calculateHotelAverageRating(@PathVariable Long id) {
         return ResponseEntity.ok(hotelService.calculateHotelAverageRating(id));
     }

@@ -17,7 +17,7 @@ import java.util.UUID;
 @Service
 public class RefreshTokenService {
 
-    @Value("604800000")
+    @Value("${security.jwt.refresh-token.token-expiration}")
     private long refrestExpirationTime;
 
     private final RefreshTokenRepository refreshTokenRepository;

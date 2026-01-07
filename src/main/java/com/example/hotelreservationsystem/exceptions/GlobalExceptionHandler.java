@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -80,4 +83,19 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Validation failed", errorMessages);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+   @ExceptionHandler(BadCredentialsException.class)
+   public ResponseEntity<String> handleBadCredentialsException(BadCredentialsException e) {
+       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+   }
+
+   @ExceptionHandler(AuthenticationException.class)
+   public ResponseEntity<String> handleAuthenticationException(AuthenticationException e) {
+       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
+   }
+
+   @ExceptionHandler(AccessDeniedException.class)
+   public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException e) {
+       return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: You don't have permission to access this resource");
+   }
 }
