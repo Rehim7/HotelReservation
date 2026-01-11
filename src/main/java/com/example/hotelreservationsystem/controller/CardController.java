@@ -39,14 +39,14 @@ public class CardController {
 
     @PostMapping("/increaseCardBalance/{cardId}/{amountToUpdate}")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
-    public CardResponse increaseCardBalance( @RequestBody String cardHolderName,@PathVariable Long cardId,@PathVariable Long amountToUpdate) {
-        return cardService.increaseCardBalance(cardId,cardHolderName,amountToUpdate);
+    public CardResponse increaseCardBalance(@PathVariable Long cardId,@PathVariable Long amountToUpdate) {
+        return cardService.increaseCardBalance(cardId,amountToUpdate);
     }
 
 
     @PostMapping("/decreaseCardBalance/{cardId}/{amountToUpdate}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public CardResponse decreaseCardBalance( @RequestBody String cardHolderName,@PathVariable Long cardId,@PathVariable Long amountToUpdate) {
-        return cardService.decreaseCardBalance(cardId,cardHolderName,amountToUpdate);
+    public CardResponse decreaseCardBalance(@PathVariable Long cardId,@PathVariable Long amountToUpdate) {
+        return cardService.decreaseCardBalance(cardId,amountToUpdate);
     }
 }

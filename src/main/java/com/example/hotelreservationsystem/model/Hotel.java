@@ -18,7 +18,7 @@ public class Hotel {
     private String hotelAddress;
     @Column(name = "Hotel_Description")
     private String hotelDescription;
-    @Column(name = "Hotel_Stars", nullable = false)
+    @Column(name = "Hotel_Stars")
     private double hotelStars;
     @Column(length = 500)
     private String hotelImageUrl;
@@ -26,10 +26,10 @@ public class Hotel {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private User hotelOwner;
 
-    @OneToMany(targetEntity = UserOpinions.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToMany(targetEntity = UserOpinions.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<UserOpinions> userOpinions;
 
-    @OneToMany(targetEntity = Room.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToMany(targetEntity = Room.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Room> rooms;
 
 

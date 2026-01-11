@@ -31,7 +31,7 @@ public class Room {
     @ManyToOne(targetEntity = Hotel.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     private Hotel belongingHotel;
 
-    @ManyToOne(targetEntity = User.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(targetEntity = User.class,cascade = CascadeType.PERSIST,fetch = FetchType.EAGER)
     private User ownerUser;
 
 }

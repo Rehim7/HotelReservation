@@ -8,14 +8,17 @@ import com.example.hotelreservationsystem.dto.response.RoomResponse;
 import com.example.hotelreservationsystem.exceptions.RoomNotFound;
 import com.example.hotelreservationsystem.exceptions.RoomReservedException;
 import com.example.hotelreservationsystem.model.*;
+import com.example.hotelreservationsystem.repository.HotelRepository;
 import com.example.hotelreservationsystem.repository.RoomRepository;
 import com.example.hotelreservationsystem.repository.UserOpininonsRepository;
 import com.example.hotelreservationsystem.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,6 +26,7 @@ public class RoomService {
     private final RoomRepository repository;
     private final UserRepository userRepository;
     private final TicketService ticketService;
+    private final HotelRepository hotelRepository;
     private final CardService cardService;
     private final UserOpininonsRepository  userOpininonsRepository;
     private final MailService mailService;
@@ -30,10 +34,11 @@ public class RoomService {
     private static final String Room_Data = "Room";
 
 
-    public RoomService(RoomRepository repository, UserRepository userRepository, TicketService ticketService, CardService cardService, UserOpininonsRepository userOpininonsRepository, MailService mailService) {
+    public RoomService(RoomRepository repository, UserRepository userRepository, TicketService ticketService, HotelRepository hotelRepository, CardService cardService, UserOpininonsRepository userOpininonsRepository, MailService mailService) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.ticketService = ticketService;
+        this.hotelRepository = hotelRepository;
         this.cardService = cardService;
         this.userOpininonsRepository = userOpininonsRepository;
 
@@ -103,10 +108,10 @@ public class RoomService {
         room.setDescription(roomRequest.getDescription());
         room.setPrice(roomRequest.getPrice());
         room.setRoomNumber(roomRequest.getRoomNumber());
-        room.setBelongingHotel(roomRequest.getBelongingHotel());
+        room.setBelongingHotel(hotelRepository.findByHotelName(roomRequest.getBelongingHotel()));
         room.setReserved(false);
         room.setOwnerUser(null);
-        room.setUserOpinions(null);
+        room.setUserOpinions(new ArrayList<>());
 
         repository.save(room);
         RoomResponse roomResponse = new RoomResponse();
@@ -117,7 +122,7 @@ public class RoomService {
         roomResponse.setRoomNumber(room.getRoomNumber());
         roomResponse.setBelongingHotel(room.getBelongingHotel());
         roomResponse.setReserved(false);
-        roomResponse.setUserOpinions(null);
+        roomResponse.setUserOpinions(new ArrayList<>());
         roomResponse.setOwnerUser(null);
         roomResponse.setBelongingHotel(room.getBelongingHotel());
         return roomResponse;
@@ -139,10 +144,10 @@ public class RoomService {
         return roomByRoomNumber;
     }
 
-    public void reserveRoom(Long cardId, String userHolderName, TicketRequest ticketRequest, int roomNumber, MailRequest mailRequest) throws Exception {
+    public void reserveRoom(Long cardId, TicketRequest ticketRequest, int roomNumber, MailRequest mailRequest) throws Exception {
         Room roomByRoomNumber = repository.findByRoomNumber(roomNumber);
         if (!roomByRoomNumber.isReserved()){
-            ticketService.buyTicket(cardId,userHolderName,ticketRequest,roomNumber);
+            ticketService.buyTicket(cardId,ticketRequest,roomNumber);
             try {
                 mailService.sendMail(mailRequest.getTo(),mailRequest.getSubject(),mailRequest.getBody());
             } catch (Exception e) {
@@ -154,8 +159,8 @@ public class RoomService {
     }
 
     @Transactional
-    public void unreserveRoom(Long cardId, String userHolderName) {
-        ticketService.cancelTicket(cardId,userHolderName);
+    public void unreserveRoom(Long cardId) {
+        ticketService.cancelTicket(cardId);
     }
 
 

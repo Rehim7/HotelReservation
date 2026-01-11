@@ -19,6 +19,6 @@ public class Card {
     private Long cardBalance;
 
 
-    @OneToOne(targetEntity = User.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToOne(targetEntity = User.class,cascade = CascadeType.PERSIST,fetch = FetchType.EAGER)
     private User user;
 }

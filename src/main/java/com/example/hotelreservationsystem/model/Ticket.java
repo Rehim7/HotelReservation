@@ -20,7 +20,7 @@ public class Ticket {
     private Date startDate;
     private Date endDate;
 
-    @OneToOne(targetEntity = User.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToOne(targetEntity = User.class,cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
     private User user;
 
 

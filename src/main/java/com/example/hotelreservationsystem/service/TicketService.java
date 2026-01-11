@@ -14,6 +14,7 @@ import com.example.hotelreservationsystem.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,9 +39,9 @@ public class TicketService {
 
 
     @Transactional
-    public TicketResponse buyTicket(Long cardId, String userHolderName, TicketRequest  ticketRequest,int roomNumber) {
+    public TicketResponse buyTicket(Long cardId,  TicketRequest  ticketRequest,int roomNumber) {
         Card byId = cardRepository.findCardById((cardId));
-        if (byId.getCardHolderName().equals(userHolderName)) {
+        if (byId.getCardHolderName().equals(SecurityContextHolder.getContext().getAuthentication().getName())) {
             Room roomByid = roomRepository.findByRoomNumber(roomNumber);
             Double price = roomByid.getPrice();
             double v = byId.getCardBalance() - price;
@@ -77,18 +78,23 @@ public class TicketService {
 
     @Transactional
     @CacheEvict(value = Ticket_Data,allEntries = true)
-    public void cancelTicket(Long cardId, String userHolderName) {
+    public void cancelTicket(Long cardId) {
         Card byId = cardRepository.findCardById((cardId));
-        User userByUserName = userRepository.findUserByUsername((userHolderName));
+        User userByUserName = userRepository.findUserByUsername((SecurityContextHolder.getContext().getAuthentication().getName()));
         if (byId.getUser().equals(userByUserName)) {
             Ticket ticket = userByUserName.getTicket();
-            int roomNumber = ticket.getRoomNumber();
-            Room roomByRoomNumber = roomRepository.findByRoomNumber(roomNumber);
+            if (ticket != null) {
+                int roomNumber = ticket.getRoomNumber();
+                Room roomByRoomNumber = roomRepository.findByRoomNumber(roomNumber);
 
-            byId.setCardBalance((long) (byId.getCardBalance() + roomByRoomNumber.getPrice()));
-            ticketRepository.delete(ticket);
-            roomByRoomNumber.setReserved(false);
-            roomRepository.save(roomByRoomNumber);
+                byId.setCardBalance((long) (byId.getCardBalance() + roomByRoomNumber.getPrice()));
+                ticketRepository.delete(ticket);
+                roomByRoomNumber.setReserved(false);
+                roomRepository.save(roomByRoomNumber);
+            } else{
+                throw new NullPointerException();
+            }
+
         } else {
             try {
                 throw new Exception("User and Card doesnt match");

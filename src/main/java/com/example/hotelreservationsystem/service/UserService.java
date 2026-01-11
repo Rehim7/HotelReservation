@@ -1,7 +1,6 @@
 package com.example.hotelreservationsystem.service;
 
 import com.example.hotelreservationsystem.repository.UserRepository;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,7 +16,6 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    @Cacheable(value = "users", key = "#username")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("User not found with email : " +  username));
     }

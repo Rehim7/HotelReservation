@@ -25,10 +25,10 @@ public class TicketController {
     }
 
 
-    @PostMapping("/buyTicket/{cardId}/{userHolderName}/{roomNumber}")
+    @PostMapping("/buyTicket/{cardId}/{roomNumber}")
     @PreAuthorize("hasAnyRole( 'ROLE_USER','ROLE_ADMIN','ROLE_HOTELOWNER')")
-    public TicketResponse buyTicket(@PathVariable Long cardId, @PathVariable String userHolderName, @PathVariable int roomNumber,@RequestBody TicketRequest ticketRequest) {
-        return ticketService.buyTicket(cardId,userHolderName,ticketRequest,roomNumber);
+    public TicketResponse buyTicket(@PathVariable Long cardId, @PathVariable int roomNumber,@RequestBody TicketRequest ticketRequest) {
+        return ticketService.buyTicket(cardId,ticketRequest,roomNumber);
     }
 
 
@@ -44,10 +44,10 @@ public class TicketController {
         return ticketService.getTicketByUserName(username);
     }
 
-    @PostMapping("/cancelTicket/{cardId}/{userHolderName}")
+    @PostMapping("/cancelTicket/{cardId}")
     @PreAuthorize("hasAnyRole('ROLE_USER','ROLE_ADMIN')")
-    public void cancelTicket(@PathVariable Long cardId,@PathVariable String userHolderName) {
-        ticketService.cancelTicket(cardId,userHolderName);
+    public void cancelTicket(@PathVariable Long cardId) {
+        ticketService.cancelTicket(cardId);
     }
 
 

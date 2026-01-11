@@ -20,5 +20,5 @@ public class RoomRequest {
     private String roomView;
     private boolean isReserved = false;
     @NotBlank(message = "Room should be in a hotel")
-    private Hotel belongingHotel;
+    private String belongingHotel;
 }

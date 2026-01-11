@@ -65,18 +65,18 @@ public class RoomController {
     }
 
 
-    @PostMapping("/reserveRoom/{cardId}/{userHolderName}/{roomNumber}")
+    @PostMapping("/reserveRoom/{cardId}/{roomNumber}")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
-    public void reserveRoom(@PathVariable Long cardId, @PathVariable String userHolderName, @PathVariable int roomNumber,
+    public void reserveRoom(@PathVariable Long cardId, @PathVariable int roomNumber,
                             @Valid @RequestBody TicketRequest ticketRequest, MailRequest mailRequest) throws Exception {
-        roomService.reserveRoom(cardId,userHolderName,ticketRequest,roomNumber,mailRequest);
+        roomService.reserveRoom(cardId,ticketRequest,roomNumber,mailRequest);
     }
 
 
-    @PostMapping("/unreservRoom/{cardId}/{userHolderName}")
+    @PostMapping("/unreservRoom/{cardId}")
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
-    public void unReserveRoom(@PathVariable Long cardId, @PathVariable String userHolderName) {
-        roomService.unreserveRoom(cardId,userHolderName);
+    public void unReserveRoom(@PathVariable Long cardId) {
+        roomService.unreserveRoom(cardId);
     }
 
     @PatchMapping("/rating/{id}")

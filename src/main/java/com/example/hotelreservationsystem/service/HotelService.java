@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -44,8 +45,8 @@ public class HotelService {
         hotel.setHotelImageUrl(hotelRequest.getHotelImageUrl());
         hotel.setHotelStars(0);
         hotel.setHotelDescription(hotelRequest.getHotelDescription());
-        hotel.setHotelOwner(hotelRequest.getHotelOwner());
-        hotel.setUserOpinions(null);
+        hotel.setHotelOwner(userRepository.findUserByUsername(hotelRequest.getHotelOwner()));
+        hotel.setUserOpinions(new ArrayList<>());
 
         hotelRepository.save(hotel);
         HotelResponse hotelResponse = new HotelResponse();

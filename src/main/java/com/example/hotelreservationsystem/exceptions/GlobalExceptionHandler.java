@@ -33,8 +33,8 @@ public class GlobalExceptionHandler {
 
 
    @ExceptionHandler(HotelAlreadyExist.class)
-   public ResponseEntity<String> hotelAlreadyExist(HotelRequest hotelRequest) {
-       return ResponseEntity.status(HttpStatus.CONFLICT).body(hotelRequest.toString());
+   public ResponseEntity<String> hotelAlreadyExist(HotelAlreadyExist e ) {
+       return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
    }
 
    @ExceptionHandler(CardNotFound.class)

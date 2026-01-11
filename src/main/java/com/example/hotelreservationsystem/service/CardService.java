@@ -11,6 +11,7 @@ import com.example.hotelreservationsystem.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,11 +36,11 @@ public class CardService {
         User userByUserName = userRepository.findUserByUsername((cardRequest.getCardHolderName()));
         Card card = new Card();
         card.setCardNumber(cardRequest.getCardNumber());
-        card.setCardBalance(null);
+        card.setCardBalance(0L);
         card.setCardHolderName(cardRequest.getCardHolderName());
         card.setExpirationDate(cardRequest.getExpirationDate());
         card.setCvv(cardRequest.getCvv());
-        card.setUser(userByUserName.getCard().getUser());
+        card.setUser(userByUserName);
 
         cardRepository.save(card);
         CardResponse cardResponse = new CardResponse();
@@ -63,10 +64,10 @@ public class CardService {
     }
 
     @Transactional
-    public CardResponse increaseCardBalance(Long id,String cardHolderName,Long amountToUpdate) {
+    public CardResponse increaseCardBalance(Long id,Long amountToUpdate) {
         Card card = cardRepository.findById(id).orElseThrow();
 
-        boolean equals = card.getCardHolderName().equals(cardHolderName);
+        boolean equals = card.getCardHolderName().equals(SecurityContextHolder.getContext().getAuthentication().getName());
         if (equals) {
             card.setCardBalance(card.getCardBalance() + amountToUpdate);
             cardRepository.save(card);
@@ -83,9 +84,9 @@ public class CardService {
     }
 
     @Transactional
-    public CardResponse decreaseCardBalance(Long id, String cardHolderName, Long amountToUpdate) {
+    public CardResponse decreaseCardBalance(Long id, Long amountToUpdate) {
         Card card = cardRepository.findById(id).orElseThrow();
-        boolean equals = card.getCardHolderName().equals(cardHolderName);
+        boolean equals = card.getCardHolderName().equals(SecurityContextHolder.getContext().getAuthentication().getName());
         if (equals) {
             card.setCardBalance((long) (card.getCardBalance() - amountToUpdate));
             cardRepository.save(card);
