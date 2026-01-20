@@ -1,10 +1,6 @@
 package com.example.hotelreservationsystem.dto.response;
 
-import com.example.hotelreservationsystem.model.Hotel;
-import com.example.hotelreservationsystem.model.User;
-import com.example.hotelreservationsystem.model.User;
-import com.example.hotelreservationsystem.model.UserOpinions;
-import jakarta.persistence.*;
+import com.example.hotelreservationsystem.model.RoomType;
 import lombok.Data;
 
 import java.util.List;
@@ -18,7 +14,10 @@ public class RoomResponse {
     private String roomView;
     private double roomStar;
     private boolean isReserved;
-    private List<UserOpinions> userOpinions;
-    private Hotel belongingHotel;
-    private User ownerUser;
+
+    // Sadə sahələr: lazy proxy-lər seriyalaşarkən xəta verməsin deyə
+    private List<String> userOpinionTexts;
+    private Long belongingHotelId;
+    private String ownerUserEmail;
+    private RoomType roomType;
 }

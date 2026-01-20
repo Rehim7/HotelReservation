@@ -5,6 +5,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.Date;
@@ -12,13 +13,13 @@ import java.util.Date;
 @Data
 public class TicketRequest {
 
-    @NotBlank
-    private String roomNumber;
+    @NotNull
+    private Long roomNumber;
 
 
-    @NotBlank
+    @NotNull
     private Date startDate;
-    @NotBlank
+    @NotNull
     private Date endDate;
 }
 

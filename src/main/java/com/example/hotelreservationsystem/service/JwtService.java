@@ -33,6 +33,29 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
+    public java.util.List<String> extractUserRoles(String token) {
+        return extractClaim(token, claims -> {
+            Object rolesObject = claims.get("role");
+            if (rolesObject == null)
+                rolesObject = claims.get("roles");
+            if (rolesObject == null)
+                rolesObject = claims.get("authorities");
+
+            if (rolesObject instanceof String) {
+                return java.util.Collections.singletonList((String) rolesObject);
+            } else if (rolesObject instanceof java.util.Collection) {
+                java.util.List<String> roles = new java.util.ArrayList<>();
+                for (Object o : (java.util.Collection<?>) rolesObject) {
+                    if (o instanceof String) {
+                        roles.add((String) o);
+                    }
+                }
+                return roles;
+            }
+            return java.util.Collections.emptyList();
+        });
+    }
+
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
@@ -59,7 +82,7 @@ public class JwtService {
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 

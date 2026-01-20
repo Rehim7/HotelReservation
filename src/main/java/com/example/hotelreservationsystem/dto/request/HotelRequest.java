@@ -25,11 +25,10 @@ public class HotelRequest {
     @NotBlank(message = "Hotel should have Hotel view information for users")
     private String hotelImageUrl;
 
-    @NotEmpty(message = "Hotel needs at least one room")
-    private List<Room> rooms;
-
-    @NotNull(message = "HotelOwner required")
+    @NotBlank(message = "Hotel owner email is required")
     private String hotelOwner;
+
+    private List<Room> rooms;
 
     private MailRequest mailRequest;
 }

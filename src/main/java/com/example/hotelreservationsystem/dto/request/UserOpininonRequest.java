@@ -7,12 +7,14 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class UserOpininonRequest {
-    @NotBlank @Size(min = 1, max = 5)
+    @NotNull
+    @Size(min = 1, max = 5)
     private double rating;
     private String userOpinions;
     @NotBlank

@@ -24,13 +24,13 @@ public class HotelController {
     }
 
     @PostMapping("/createHotel")
-    @PreAuthorize("hasRole('ROLE_HOTELOWNER')")
+    @PreAuthorize("isAuthenticated()")
     public HotelResponse createHotel(@Valid @RequestBody HotelRequest hotelRequest) {
         return hotelService.createHotel(hotelRequest, hotelRequest.getMailRequest());
     }
 
     @DeleteMapping("/deleteHotel/{hotelId}")
-    @PreAuthorize("hasRole('ROLE_HOTELOWNER')")
+    @PreAuthorize("isAuthenticated()")
     public void deleteHotel(@PathVariable("hotelId") Long hotelId) {
         hotelService.deleteHotel(hotelId);
     }
@@ -41,8 +41,8 @@ public class HotelController {
     }
 
     @GetMapping("/getHotelById/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_HOTELOWNER')")
-    public Hotel getHotelById(@PathVariable("id") Long id) {
+    @PreAuthorize("isAuthenticated()")
+    public HotelResponse getHotelById(@PathVariable("id") Long id) {
         return hotelService.findById(id);
     }
 
@@ -52,12 +52,12 @@ public class HotelController {
     }
 
     @PostMapping("/userOpinionSetToHotel/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_HOTELOWNER')")
+    @PreAuthorize("isAuthenticated()")
     public void userOpinionSetToHotel(@PathVariable Long id, @Valid @RequestBody UserOpininonRequest userOpininonRequest) {
         hotelService.userOpinionSetToHotel(id,userOpininonRequest);
     }
     @PatchMapping("/rating/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_HOTELOWNER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Double> calculateHotelAverageRating(@PathVariable Long id) {
         return ResponseEntity.ok(hotelService.calculateHotelAverageRating(id));
     }
@@ -65,4 +65,3 @@ public class HotelController {
 
 
 }
-

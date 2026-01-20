@@ -23,7 +23,7 @@ public class Hotel {
     @Column(length = 500)
     private String hotelImageUrl;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private User hotelOwner;
 
     @OneToMany(targetEntity = UserOpinions.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)

@@ -1,6 +1,7 @@
 package com.example.hotelreservationsystem.dto.request;
 
 import com.example.hotelreservationsystem.model.Hotel;
+import com.example.hotelreservationsystem.model.RoomType;
 import com.example.hotelreservationsystem.model.User;
 import com.example.hotelreservationsystem.model.UserOpinions;
 import jakarta.persistence.*;
@@ -21,4 +22,6 @@ public class RoomRequest {
     private boolean isReserved = false;
     @NotBlank(message = "Room should be in a hotel")
     private String belongingHotel;
+    @NotBlank
+    private RoomType roomType;
 }

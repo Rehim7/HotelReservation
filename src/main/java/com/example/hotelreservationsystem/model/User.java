@@ -32,23 +32,24 @@ public class User implements UserDetails {
     @Column(name = "User_Roles",nullable = false)
     private Roles userRole;
 
-    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private Long ticketId;
+
+    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<UserOpinions> userOpinions;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Hotel ownedHotel;
 
 
-    @OneToMany(targetEntity = Room.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToMany(targetEntity = Room.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Room> rooms;
 
 
-    @OneToOne(targetEntity = Card.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-    private Card card;
+//    @OneToOne(targetEntity = Card.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+//    private Card card;
 
-    @OneToOne(targetEntity = Ticket.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-    private Ticket ticket;
 
+    @Builder.Default
     @jakarta.persistence.Transient
     private boolean enabled = true; // TODO: Remove @Transient and add @Column after running migration.sql
 
@@ -82,3 +83,4 @@ public class User implements UserDetails {
         return this.enabled;
     }
 }
+

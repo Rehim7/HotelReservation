@@ -3,7 +3,6 @@ package com.example.hotelreservationsystem.controller;
 import com.example.hotelreservationsystem.dto.request.TicketRequest;
 import com.example.hotelreservationsystem.dto.response.TicketResponse;
 import com.example.hotelreservationsystem.exceptions.BalanceIsNotEnough;
-import com.example.hotelreservationsystem.model.Card;
 import com.example.hotelreservationsystem.model.Room;
 import com.example.hotelreservationsystem.model.Ticket;
 import com.example.hotelreservationsystem.model.User;
@@ -25,30 +24,30 @@ public class TicketController {
     }
 
 
-    @PostMapping("/buyTicket/{cardId}/{roomNumber}")
-    @PreAuthorize("hasAnyRole( 'ROLE_USER','ROLE_ADMIN','ROLE_HOTELOWNER')")
-    public TicketResponse buyTicket(@PathVariable Long cardId, @PathVariable int roomNumber,@RequestBody TicketRequest ticketRequest) {
-        return ticketService.buyTicket(cardId,ticketRequest,roomNumber);
-    }
+//    @PostMapping("/buyTicket/{cardId}/{roomNumber}")
+//    @PreAuthorize("isAuthenticated()")
+//    public TicketResponse buyTicket(@PathVariable Long cardId, @PathVariable Long roomNumber,@RequestBody TicketRequest ticketRequest) {
+//        return ticketService.buyTicket(cardId,ticketRequest,roomNumber);
+//    }
 
 
     @GetMapping("/getAllTickets")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_HOTELOWNER')")
+    @PreAuthorize("isAuthenticated()")
     public List<Ticket> getAll(){
         return ticketService.getAllTickets();
     }
 
     @GetMapping("/getTicketByUserName/{username}")
-    @PreAuthorize("hasAnyRole('ROLE_USER','ROLE_ADMIN','ROLE_HOTELOWNER')")
+    @PreAuthorize("isAuthenticated()")
     public TicketResponse getTicket(@PathVariable String username){
         return ticketService.getTicketByUserName(username);
     }
 
-    @PostMapping("/cancelTicket/{cardId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER','ROLE_ADMIN')")
-    public void cancelTicket(@PathVariable Long cardId) {
-        ticketService.cancelTicket(cardId);
-    }
+//    @PostMapping("/cancelTicket/{cardId}")
+//    @PreAuthorize("isAuthenticated()")
+//    public void cancelTicket(@PathVariable Long cardId) {
+//        ticketService.cancelTicket(cardId);
+//    }
 
 
 

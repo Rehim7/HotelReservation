@@ -19,19 +19,21 @@ public class Room {
     private int roomNumber;
     @Column(name = "Room_Views")
     private String roomView;
-    @Column(name = "Room_Stars",nullable = false)
-    private Double roomStar;
+    @Column(name = "Room_Stars")
+    private Double roomStar = 0.0;
     @Column(name = "Reserved",nullable = false)
-    private boolean isReserved;
+    private boolean isReserved = false;
+    @Column(nullable = false)
+    private RoomType roomType;
 
 
-    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<UserOpinions> userOpinions;
 
-    @ManyToOne(targetEntity = Hotel.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(targetEntity = Hotel.class,cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
     private Hotel belongingHotel;
 
-    @ManyToOne(targetEntity = User.class,cascade = CascadeType.PERSIST,fetch = FetchType.EAGER)
+    @ManyToOne(targetEntity = User.class,cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
     private User ownerUser;
 
 }

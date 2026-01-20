@@ -18,6 +18,6 @@ public interface RoomRepository extends JpaRepository<Room,Long> {
 
     List<Room> findRoomByRoomNumber(int roomNumber);
 
-    Room findByRoomNumber(@NotBlank(message = "Users need a room number to find room") int roomNumber);
+    Room findByRoomNumber(Long roomNumber);
 }
 
