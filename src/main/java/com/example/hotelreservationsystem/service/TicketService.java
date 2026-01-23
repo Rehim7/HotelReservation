@@ -1,12 +1,13 @@
 package com.example.hotelreservationsystem.service;
 
+import com.example.banksystem.proto.CardResponse;
 import com.example.banksystem.proto.DecreaseCardBalanceRequest;
 import com.example.banksystem.proto.GetCardByIdRequest;
+import com.example.banksystem.proto.IncreaseCardBalanceRequest;
 import com.example.hotelreservationsystem.dto.request.TicketRequest;
 import com.example.hotelreservationsystem.dto.response.TicketResponse;
-import com.example.hotelreservationsystem.exceptions.BalanceIsNotEnough;
+import com.example.hotelreservationsystem.exceptions.*;
 //import com.example.hotelreservationsystem.model.Card;
-import com.example.hotelreservationsystem.exceptions.RoomReservedException;
 import com.example.hotelreservationsystem.model.Room;
 import com.example.hotelreservationsystem.model.Ticket;
 import com.example.hotelreservationsystem.model.User;
@@ -22,6 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TicketService {
@@ -29,14 +31,16 @@ public class TicketService {
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
     private final CardGrpcClientService cardGrpcClientService;
+    private final MailService mailService;
 
     private static final String Ticket_Data = "Ticket";
 
-    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, RoomRepository roomRepository, CardGrpcClientService cardGrpcClientService) {
+    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, RoomRepository roomRepository, CardGrpcClientService cardGrpcClientService, MailService mailService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
         this.cardGrpcClientService = cardGrpcClientService;
+        this.mailService = mailService;
     }
 
 
@@ -59,30 +63,95 @@ public class TicketService {
     }
 
 
-//    @Transactional
-//    public TicketResponse buyTicket(Long cardId,  TicketRequest  ticketRequest,Long userId) {
-//        Room byRoomNumber = roomRepository.findByRoomNumber(ticketRequest.getRoomNumber());
-//        Double price = byRoomNumber.getPrice();
-//
-//        List<Ticket> byRoomNumber1 = ticketRepository.findByRoomNumber(ticketRequest.getRoomNumber());
-//        if (!byRoomNumber1.isEmpty()){
-//            throw new RoomReservedException("Room already reserved!");
-//        }
-//
-//        Ticket ticket = new Ticket();
-//        ticket.setTicketNumberOnPersist();
-//        ticket.setRoomNumber(ticketRequest.getRoomNumber());
-//        ticket.setStartDate(ticketRequest.getStartDate());
-//        ticket.setEndDate(ticketRequest.getEndDate());
-//        ticket.setUserId(userId);
-//
-//
-//        DecreaseCardBalanceRequest decreaseCardBalanceRequest = DecreaseCardBalanceRequest.newBuilder()
-//                .setId(cardId)
-//                .setAmountToUpdate
-//                .
-//
-//    }
+    @Transactional
+    public TicketResponse buyTicket(Long cardId,  TicketRequest  ticketRequest,Long userId) {
+        List<Room> byRoomNumber =  roomRepository.findByRoomNumber(Math.toIntExact(ticketRequest.getRoomNumber()));
+        Double price = byRoomNumber.get(0).getPrice();
+
+        List<Ticket> byRoomNumber1 = ticketRepository.findByRoomNumber(ticketRequest.getRoomNumber());
+        if (!byRoomNumber1.isEmpty()){
+            throw new RoomReservedException("Room already reserved!");
+        }
+
+        Ticket ticket = new Ticket();
+        ticket.setTicketNumberOnPersist();
+        ticket.setRoomNumber(ticketRequest.getRoomNumber());
+        ticket.setStartDate(ticketRequest.getStartDate());
+        ticket.setEndDate(ticketRequest.getEndDate());
+        ticket.setUserId(userId);
+
+        GetCardByIdRequest getCardByIdRequest = GetCardByIdRequest.newBuilder()
+                .setId(cardId)
+                .build();
+        CardResponse cardById = cardGrpcClientService.getCardById(getCardByIdRequest);
+
+
+        DecreaseCardBalanceRequest decreaseCardBalanceRequest = DecreaseCardBalanceRequest.newBuilder()
+                .setId(cardId)
+                .setAmountToUpdate(price)
+                .setCardNumber(cardById.getCardNumber())
+                .build();
+        cardGrpcClientService.decreaseCardBalance(decreaseCardBalanceRequest);
+        userRepository.findById(userId).ifPresent(user -> {
+            String subject = "Rezervasiya Təsdiqi";
+            String body = String.format("Hörmətli %s,\n\n%d nömrəli otaq üçün rezervasiyanız uğurla tamamlandı. \nBaşlama tarixi: %s\nBitmə tarixi: %s",
+                    user.getUsername(),
+                    ticketRequest.getRoomNumber(),
+                    ticketRequest.getStartDate().toString(),
+                    ticketRequest.getEndDate().toString());
+            mailService.sendMail(user.getEmail(), subject, body);
+        });
+
+        TicketResponse ticketResponse = new TicketResponse();
+        ticketResponse.setId(ticket.getId());
+        ticketResponse.setRoomNumber(String.valueOf(ticket.getRoomNumber()));
+        ticketResponse.setStartDate(ticket.getStartDate());
+        ticketResponse.setEndDate(ticket.getEndDate());
+        ticketResponse.setTicketNumber(ticket.getTicketNumber());
+        byRoomNumber.get(0).setReserved(true);
+        return ticketResponse;
+    }
+
+    @Transactional
+    public String cancelTicket(Long cardId,Long ticketId){
+        try {
+            Optional<Ticket> byId = ticketRepository.findById(ticketId);
+            if (byId.isEmpty()) {
+                throw new TicketDoesntExist("Ticket doesn't exist");
+            }
+            Ticket ticket = byId.get();
+            Long roomNumber = ticket.getRoomNumber();
+            Room byRoomNumber = (Room) roomRepository.findByRoomNumber(Math.toIntExact(roomNumber));
+            Double price = byRoomNumber.getPrice();
+            GetCardByIdRequest getCardByIdRequest = GetCardByIdRequest.newBuilder()
+                    .setId(cardId)
+                    .build();
+            CardResponse cardById = cardGrpcClientService.getCardById(getCardByIdRequest);
+
+            IncreaseCardBalanceRequest request = IncreaseCardBalanceRequest.newBuilder()
+                    .setAmountToUpdate(price)
+                    .setCardNumber(cardById.getCardNumber())
+                    .setId(cardId)
+                    .build();
+            ticketRepository.deleteById(ticketId);
+            cardGrpcClientService.increaseCardBalance(request);
+
+            userRepository.findById(ticket.getUserId()).ifPresent(user -> {
+                String subject = "Rezervasiyanın Ləğvi";
+                String body = String.format("Hörmətli %s,\n\n%d nömrəli otaq üçün olan rezervasiyanız uğurla ləğv edildi. Ödənişiniz kartınıza geri qaytarıldı.",
+                        user.getUsername(),
+                        roomNumber);
+                byRoomNumber.setReserved(false);
+                mailService.sendMail(user.getEmail(), subject, body);
+            });
+
+            return "Your money is back and Ticket cancelled";
+        } catch (Exception e) {
+            throw new SomethingWentWrong("Something went wrong");
+        }
+
+    }
+
 
 
 

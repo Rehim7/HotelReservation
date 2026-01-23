@@ -31,7 +31,7 @@ message CardResponse {
   string cvv = 4;
   string cardHolderName = 5;
   int64 userId = 6;
-  int64 cardBalance = 7;
+  double cardBalance = 7;
 }
 
 message DeleteCardResponse {
@@ -43,11 +43,11 @@ message DeleteCardRequest {
 }
 message IncreaseCardBalanceRequest {
   int64 id = 1;
-  int64 cardNumber = 2;
+  string cardNumber = 2;
   double amountToUpdate = 3;
 }
 message DecreaseCardBalanceRequest {
   int64 id = 1;
-  int64 cardNumber = 2;
+  string cardNumber = 2;
   double amountToUpdate = 3;
 }

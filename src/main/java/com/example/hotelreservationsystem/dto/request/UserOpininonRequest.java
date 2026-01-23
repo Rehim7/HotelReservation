@@ -14,9 +14,8 @@ import lombok.Data;
 @Data
 public class UserOpininonRequest {
     @NotNull
-    @Size(min = 1, max = 5)
     private double rating;
     private String userOpinions;
-    @NotBlank
-    private String user;
+    @NotNull
+    private Long userId;
 }

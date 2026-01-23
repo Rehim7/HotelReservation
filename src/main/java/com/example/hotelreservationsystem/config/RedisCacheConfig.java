@@ -60,9 +60,8 @@ public class RedisCacheConfig {
             @Override
             public void handleCacheGetError(RuntimeException exception, org.springframework.cache.Cache cache, Object key) {
                 if (cache != null && key != null) {
-                    cache.evict(key); // korlanmış entry-ni təmizlə
+                    cache.evict(key);
                 }
-                // davam et (repo-dan oxunacaq)
             }
         };
     }

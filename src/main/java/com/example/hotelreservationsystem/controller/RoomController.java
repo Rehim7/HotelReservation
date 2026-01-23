@@ -11,6 +11,7 @@ import com.example.hotelreservationsystem.repository.RoomRepository;
 import com.example.hotelreservationsystem.service.RoomService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import org.hibernate.validator.constraints.ParameterScriptAssert;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,16 +44,16 @@ public class RoomController {
         roomService.deleteRoom(id);
     }
 
-//    @GetMapping("/findUnreservedRooms")
-//    public List<RoomResponse> findUnreservedRooms() {
-//        return roomService.findUnreservedRooms();
-//    }
+    @GetMapping("/findUnreservedRooms/{hotelId}")
+    public List<RoomResponse> findUnreservedRooms(@PathVariable Long hotelId) {
+        return roomService.findAvailableRoomsByHotelId(hotelId);
+    }
 
-//    @GetMapping("/getAllRooms")
-//    @PreAuthorize("isAuthenticated()")
-//    public List<RoomResponse> getAllRooms() {
-//        return roomService.findAll();
-//    }
+    @GetMapping("/getAllRooms/{hotelId}")
+    @PreAuthorize("isAuthenticated()")
+    public List<RoomResponse> getAllRooms(@PathVariable Long hotelId) {
+        return roomService.findAllRoomsByHotel(hotelId);
+    }
 
     @PostMapping("/userOpinionSetToRoom/{id}")
     @PreAuthorize("isAuthenticated()")
@@ -66,19 +67,6 @@ public class RoomController {
     public List<RoomResponse> findByRoomNumber(@PathVariable int id) {
         return roomService.findRoomByRoomNumber(id);
     }
-
-//    @PostMapping("/reserveRoom/{cardId}/{roomNumber}")
-//    @PreAuthorize("isAuthenticated()")
-//    public void reserveRoom(@PathVariable Long cardId, @PathVariable Long roomNumber,
-//            @Valid @RequestBody ReserveRoomCombinedRequest request) throws Exception {
-//        roomService.reserveRoom(cardId, request.getTicketRequest(), roomNumber, request.getMailRequest());
-//    }
-//
-//    @PostMapping("/unreservRoom/{cardId}")
-//    @PreAuthorize("isAuthenticated()")
-//    public void unReserveRoom(@PathVariable Long cardId) {
-//        roomService.unreserveRoom(cardId);
-//    }
 
     @PatchMapping("/rating/{id}")
     @PreAuthorize("isAuthenticated()")

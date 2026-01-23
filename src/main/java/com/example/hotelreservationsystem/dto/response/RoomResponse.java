@@ -15,8 +15,7 @@ public class RoomResponse {
     private double roomStar;
     private boolean isReserved;
 
-    // Sadə sahələr: lazy proxy-lər seriyalaşarkən xəta verməsin deyə
-    private List<String> userOpinionTexts;
+    private List<String> userOpinions;
     private Long belongingHotelId;
     private String ownerUserEmail;
     private RoomType roomType;

@@ -4,6 +4,7 @@ import com.example.hotelreservationsystem.dto.request.HotelRequest;
 import com.example.hotelreservationsystem.dto.request.MailRequest;
 import com.example.hotelreservationsystem.dto.request.UserOpininonRequest;
 import com.example.hotelreservationsystem.dto.response.HotelResponse;
+import com.example.hotelreservationsystem.dto.response.RoomResponse;
 import com.example.hotelreservationsystem.exceptions.HotelNotFoundException;
 import com.example.hotelreservationsystem.model.Hotel;
 import com.example.hotelreservationsystem.model.Room;
@@ -15,6 +16,7 @@ import com.example.hotelreservationsystem.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
@@ -25,13 +27,16 @@ import java.util.Optional;
 @Service
 public class HotelService {
     private final HotelRepository hotelRepository;
-    private final UserRepository  userRepository;
-    private final UserOpininonsRepository  userOpininonsRepository;
+    private final UserRepository userRepository;
+    private final UserOpininonsRepository userOpininonsRepository;
     private final MailService mailService;
     private final R2StorageService r2StorageService;
 
     private static final String Hotel_Data = "Hotel";
-    public HotelService(HotelRepository hotelRepository, UserRepository userRepository, UserOpininonsRepository userOpininonsRepository, MailService mailService, R2StorageService r2StorageService) {
+
+    public HotelService(HotelRepository hotelRepository, UserRepository userRepository,
+            UserOpininonsRepository userOpininonsRepository, MailService mailService,
+            R2StorageService r2StorageService) {
         this.hotelRepository = hotelRepository;
         this.userRepository = userRepository;
         this.userOpininonsRepository = userOpininonsRepository;
@@ -39,13 +44,11 @@ public class HotelService {
         this.r2StorageService = r2StorageService;
     }
 
-
     @Transactional
     public HotelResponse createHotel(HotelRequest hotelRequest, MailRequest mailRequest) {
         Hotel hotel = new Hotel();
         hotel.setHotelName(hotelRequest.getHotelName());
         hotel.setHotelAddress(hotelRequest.getHotelAddress());
-
         String r2ImageUrl;
         try {
             r2ImageUrl = r2StorageService.uploadImageFromUrl(hotelRequest.getHotelImageUrl());
@@ -53,14 +56,45 @@ public class HotelService {
         } catch (IOException e) {
             throw new RuntimeException("Şəkil URL-dən yüklənib R2-yə upload edilərkən xəta: " + e.getMessage(), e);
         }
-        
+
         hotel.setHotelStars(0);
         hotel.setHotelDescription(hotelRequest.getHotelDescription());
-        hotel.setHotelOwner(userRepository.findByEmail(hotelRequest.getHotelOwner())
-                                         .orElseThrow(() -> new UsernameNotFoundException("Hotel owner not found with email: " + hotelRequest.getHotelOwner())));
-        hotel.setUserOpinions(new ArrayList<>());
+        hotel.setHotelOwner(
+                userRepository.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName()));
 
+        hotel.setUserOpinions(new ArrayList<>());
         hotelRepository.save(hotel);
+
+        mailService.sendMail(mailRequest.getTo(), mailRequest.getSubject(), mailRequest.getBody());
+        return mapToResponse(hotel);
+    }
+
+    @Transactional
+    @CacheEvict(value = Hotel_Data, allEntries = true)
+    public void deleteHotel(Long id) {
+        hotelRepository.deleteById(id);
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Cacheable(Hotel_Data)
+    public List<HotelResponse> findAll() {
+        List<Hotel> hotels = hotelRepository.findAll();
+        List<HotelResponse> responses = new ArrayList<>();
+
+        for (Hotel hotel : hotels) {
+            responses.add(mapToResponse(hotel));
+        }
+
+        return responses;
+    }
+
+    public HotelResponse findById(Long id) {
+        Hotel hotel = hotelRepository.findById(id)
+                .orElseThrow(() -> new HotelNotFoundException("Hotel not found with id: " + id));
+        return mapToResponse(hotel);
+    }
+
+    private HotelResponse mapToResponse(Hotel hotel) {
         HotelResponse hotelResponse = new HotelResponse();
         hotelResponse.setId(hotel.getId());
         hotelResponse.setHotelName(hotel.getHotelName());
@@ -68,65 +102,42 @@ public class HotelService {
         hotelResponse.setHotelImageUrl(hotel.getHotelImageUrl());
         hotelResponse.setHotelStars(hotel.getHotelStars());
         hotelResponse.setHotelDescription(hotel.getHotelDescription());
-        hotelResponse.setUserOpinions(hotel.getUserOpinions());
-        hotelResponse.setRooms(hotel.getRooms());
-        mailService.sendMail(mailRequest.getTo(),mailRequest.getSubject(),mailRequest.getBody());
-        return hotelResponse;
-    }
+        hotelResponse.setHotelOwner(hotel.getHotelOwner() != null ? hotel.getHotelOwner().getUsername() : null);
 
-    @Transactional
-    @CacheEvict(value = Hotel_Data,allEntries = true)
-    public void  deleteHotel(Long id) {
-        hotelRepository.deleteById(id);
-    }
-
-
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    @Cacheable(Hotel_Data)
-    public List<HotelResponse> findAll() {
-        List<Hotel> hotels = hotelRepository.findAll();
-        List<HotelResponse> responses = new ArrayList<>();
-        
-        for (Hotel hotel : hotels) {
-            HotelResponse hotelResponse = new HotelResponse();
-            hotelResponse.setId(hotel.getId());
-            hotelResponse.setHotelName(hotel.getHotelName());
-            hotelResponse.setHotelAddress(hotel.getHotelAddress());
-            hotelResponse.setHotelImageUrl(hotel.getHotelImageUrl());
-            hotelResponse.setHotelStars(hotel.getHotelStars());
-            hotelResponse.setHotelDescription(hotel.getHotelDescription());
-
-            if (hotel.getUserOpinions() != null) {
-                hotelResponse.setUserOpinions(new ArrayList<>(hotel.getUserOpinions()));
-            } else {
-                hotelResponse.setUserOpinions(new ArrayList<>());
-            }
-            
-            if (hotel.getRooms() != null) {
-                hotelResponse.setRooms(new ArrayList<>(hotel.getRooms()));
-            } else {
-                hotelResponse.setRooms(new ArrayList<>());
-            }
-            
-            responses.add(hotelResponse);
+        List<String> opinions = new ArrayList<>();
+        if (hotel.getUserOpinions() != null) {
+            hotel.getUserOpinions().forEach(op -> opinions.add(op.getUserOpinions()));
         }
+        hotelResponse.setUserOpinions(opinions);
 
-        return responses;
-    }
+        List<RoomResponse> roomResponses = new ArrayList<>();
+        if (hotel.getRooms() != null) {
+            hotel.getRooms().forEach(room -> {
+                RoomResponse rr = new RoomResponse();
+                rr.setId(room.getId());
+                rr.setRoomNumber(room.getRoomNumber());
+                rr.setPrice(room.getPrice());
+                rr.setDescription(room.getDescription());
+                rr.setRoomView(room.getRoomView());
+                rr.setRoomStar(room.getRoomStar() != null ? room.getRoomStar() : 0.0);
+                rr.setReserved(room.isReserved());
+                rr.setRoomType(room.getRoomType());
+                rr.setBelongingHotelId(hotel.getId());
+                rr.setOwnerUserEmail(room.getOwnerUser() != null ? room.getOwnerUser().getEmail() : null);
 
-    public HotelResponse findById(Long id) {
-        Optional<Hotel> byId = hotelRepository.findById(id);
-        HotelResponse hotelResponse = new HotelResponse();
-        hotelResponse.setId(id);
-        hotelResponse.setHotelName(byId.get().getHotelName());
-        hotelResponse.setHotelAddress(byId.get().getHotelAddress());
-        hotelResponse.setHotelImageUrl(byId.get().getHotelImageUrl());
-        hotelResponse.setHotelStars(byId.get().getHotelStars());
-        hotelResponse.setHotelDescription(byId.get().getHotelDescription());
-        hotelResponse.setRooms(byId.get().getRooms());
-        hotelResponse.setUserOpinions(byId.get().getUserOpinions());
+                List<String> roomOpinions = new ArrayList<>();
+                if (room.getUserOpinions() != null) {
+                    room.getUserOpinions().forEach(op -> roomOpinions.add(op.getUserOpinions()));
+                }
+                rr.setUserOpinions(roomOpinions);
+                roomResponses.add(rr);
+            });
+        }
+        hotelResponse.setRooms(roomResponses);
+
         return hotelResponse;
     }
+
     public Hotel findByHotelName(String hotelName) {
         return hotelRepository.findByHotelName(hotelName);
     }
@@ -135,11 +146,10 @@ public class HotelService {
     public void userOpinionSetToHotel(Long hotelId, UserOpininonRequest request) {
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new HotelNotFoundException("Hotel not found with id: " + hotelId));
-        User user = userRepository.findByEmail(request.getUser())
-                                  .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + request.getUser()));
+        Optional<User> byId = userRepository.findById(request.getUserId());
         UserOpinions newOpinion = new UserOpinions();
         newOpinion.setUserOpinions(request.getUserOpinions());
-        newOpinion.setUser(user);
+        newOpinion.setUser(byId.get());
         newOpinion.setRating(request.getRating());
 
         userOpininonsRepository.save(newOpinion);
@@ -147,7 +157,6 @@ public class HotelService {
         hotel.getUserOpinions().add(newOpinion);
         hotelRepository.save(hotel);
     }
-
 
     @Transactional
     public double calculateHotelAverageRating(Long hotelId) {
@@ -167,8 +176,5 @@ public class HotelService {
         hotelRepository.save(hotel);
         return average;
     }
-
-
-
 
 }

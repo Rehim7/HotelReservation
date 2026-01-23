@@ -9,7 +9,7 @@ spring:
 
   # --- Verilənlər Bazası ---
   datasource:
-    url: jdbc:postgresql://localhost:5432/hotelManagement
+    url: jdbc:postgresql://localhost:5432/hotelSystem
     username: postgres
     password: ${DB_PASSWORD:52020278522}
     driver-class-name: org.postgresql.Driver
@@ -55,16 +55,18 @@ spring:
             enable: true
           connectiontimeout: 5000
           timeout: 5000
-          writetimeout: 5000
+          writetimeout: 5
+
+
 
 # --- gRPC Konfiqurasiyası ---
 grpc:
   server:
-    port: 9091 # Card servisi useri yoxlamaq üçün bura bağlanacaq
+    port: 9091
     reflection-enabled: true
   client:
-    card-service:
-      address: 'static://localhost:9090' # Hotel-dən Card-a müraciət üçün
+    cardService:
+      address: 'static://localhost:9090'
       negotiation-type: plaintext
 
 # --- Cloudflare R2 Storage ---

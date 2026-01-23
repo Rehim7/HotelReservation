@@ -25,10 +25,5 @@ public class HotelRequest {
     @NotBlank(message = "Hotel should have Hotel view information for users")
     private String hotelImageUrl;
 
-    @NotBlank(message = "Hotel owner email is required")
-    private String hotelOwner;
-
-    private List<Room> rooms;
-
     private MailRequest mailRequest;
 }

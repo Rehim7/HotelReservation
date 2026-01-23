@@ -24,7 +24,6 @@ ext {
 repositories {
     mavenCentral()
 }
-
 dependencies {
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -33,6 +32,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     // Swagger & JWT
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
@@ -44,23 +44,22 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'software.amazon.awssdk:s3:2.20.100'
 
-    // gRPC & Protobuf
-    implementation 'net.devh:grpc-client-spring-boot-starter:2.15.0.RELEASE'
-    implementation "net.devh:grpc-server-spring-boot-starter:3.1.0.RELEASE"
-    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
-    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
-    implementation "io.grpc:grpc-stub:${grpcVersion}"
-    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
+    // gRPC - Spring Boot 3 üçün yalnız starter bəs edir
+    // Bu starter daxili olaraq lazım olan bütün grpc modullarını uyğun versiyada gətirir
+    implementation 'net.devh:grpc-spring-boot-starter:3.1.0.RELEASE'
 
-    // XƏTANIN HƏLLİ: gRPC-nin generatsiya etdiyi kodlar üçün javax annotasiyaları
-    implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    // Spring Boot 3 üçün jakarta annotasiyaları (mütləq qalmalıdır)
-    compileOnly 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+    // DIQQƏT: Aşağıdakı 3 sətri SİLDİM, çünki starter ilə toqquşur:
+    // implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    // implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    // implementation "io.grpc:grpc-stub:${grpcVersion}"
 
-    // Lombok
+    // Annotasiyalar
+    compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+    implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+
+    // Lombok & Database
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-
     runtimeOnly 'org.postgresql:postgresql'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

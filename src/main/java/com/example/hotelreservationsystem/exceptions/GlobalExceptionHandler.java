@@ -22,7 +22,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<String> handleUsernameNotFoundException(UsernameNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(RoomAlreadyExist.class)
+    public ResponseEntity<String> handleRoomAlreadyExist(RoomAlreadyExist ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
 
@@ -37,12 +42,19 @@ public class GlobalExceptionHandler {
 
    }
 
-
+   @ExceptionHandler(SomethingWentWrong.class)
+   public ResponseEntity<String> somethingWentWrongExceptionHandler(SomethingWentWrong e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+   }
    @ExceptionHandler(HotelAlreadyExist.class)
    public ResponseEntity<String> hotelAlreadyExist(HotelAlreadyExist e ) {
        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
    }
 
+   @ExceptionHandler(TicketDoesntExist.class)
+   public ResponseEntity<String> ticketDoesntExist(TicketDoesntExist e ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+   }
    @ExceptionHandler(CardNotFound.class)
    public ResponseEntity<String> cardNotFoundExceptionHandler(CardNotFound e) {
        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

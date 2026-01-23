@@ -26,67 +26,79 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtFilters jwtFilters;
-    private final CorsConfigurationSource corsConfigurationSource; // CorsConfig-dən gəlir
+        private final JwtFilters jwtFilters;
+        private final CorsConfigurationSource corsConfigurationSource; // CorsConfig-dən gəlir
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                // CORS konfiqurasiyası - CorsConfig-dən gələn bean istifadə olunur
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
-                .csrf(AbstractHttpConfigurer::disable)
+                                .csrf(AbstractHttpConfigurer::disable)
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/hotelReservationSystem/security/login",
-                                "/api/hotelReservationSystem/security/register",
-                                "/api/hotelReservationSystem/security/refresh-token",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-resources/**",
-                                "/webjars/**")
-                        .permitAll()
+                                .authorizeHttpRequests(auth -> auth
+                                                // Public endpoint-lər
+                                                .requestMatchers(
+                                                                "/api/hotelReservationSystem/security/login",
+                                                                "/api/hotelReservationSystem/security/register",
+                                                                "/api/hotelReservationSystem/security/refresh-token",
+                                                                "/v3/api-docs/**",
+                                                                "/v3/api-docs.yaml",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/swagger-resources/**",
+                                                                "/webjars/**",
+                                                                "/frontend/**",
+                                                                "/ws/**")
+                                                .permitAll()
 
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/hotelReservationSystem/hotel/getAllHotels",
-                                "/api/hotelReservationSystem/hotel/getHotelByName/**",
-                                "/api/hotelReservationSystem/room/findUnreservedRooms")
-                        .permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                                // Public GET endpoint-lər
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/hotelReservationSystem/hotel/getAllHotels",
+                                                                "/api/hotelReservationSystem/hotel/getHotelByName/**",
+                                                                "/api/hotelReservationSystem/room/findUnreservedRooms/**")
+                                                .permitAll()
 
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                                // OPTIONS sorğularına icazə ver (CORS preflight)
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                            Map<String, Object> body = new HashMap<>();
-                            body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
-                            body.put("error", "Unauthorized");
-                            body.put("message", "Authentication is required to access this resource");
-                            body.put("path", request.getServletPath());
+                                                // Bütün digər sorğular authentication tələb edir
+                                                .anyRequest().authenticated())
 
-                            new ObjectMapper().writeValue(response.getOutputStream(), body);
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                            Map<String, Object> body = new HashMap<>();
-                            body.put("status", HttpServletResponse.SC_FORBIDDEN);
-                            body.put("error", "Forbidden");
-                            body.put("message", "You don't have permission to access this resource");
-                            body.put("path", request.getServletPath());
+                                .exceptionHandling(exception -> exception
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-                            new ObjectMapper().writeValue(response.getOutputStream(), body);
-                        }))
+                                                        Map<String, Object> body = new HashMap<>();
+                                                        body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
+                                                        body.put("error", "Unauthorized");
+                                                        body.put("message",
+                                                                        "Authentication is required to access this resource");
+                                                        body.put("path", request.getServletPath());
 
-                .addFilterBefore(jwtFilters, UsernamePasswordAuthenticationFilter.class);
+                                                        new ObjectMapper().writeValue(response.getOutputStream(), body);
+                                                })
+                                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
-        return http.build();
-    }
+                                                        Map<String, Object> body = new HashMap<>();
+                                                        body.put("status", HttpServletResponse.SC_FORBIDDEN);
+                                                        body.put("error", "Forbidden");
+                                                        body.put("message",
+                                                                        "You don't have permission to access this resource");
+                                                        body.put("path", request.getServletPath());
+
+                                                        new ObjectMapper().writeValue(response.getOutputStream(), body);
+                                                }))
+
+                                .addFilterBefore(jwtFilters, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
 }
