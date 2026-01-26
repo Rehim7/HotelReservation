@@ -1,5 +1,6 @@
 package com.example.hotelreservationsystem.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -27,13 +28,10 @@ public class Room {
     private RoomType roomType;
 
 
-    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     private List<UserOpinions> userOpinions;
 
-    @ManyToOne(targetEntity = Hotel.class,cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
+    @ManyToOne(targetEntity = Hotel.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JsonBackReference
     private Hotel belongingHotel;
-
-    @ManyToOne(targetEntity = User.class,cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
-    private User ownerUser;
-
 }

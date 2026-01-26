@@ -1,5 +1,6 @@
 package com.example.hotelreservationsystem.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -25,14 +26,12 @@ public class Hotel {
     @Column(length = 500)
     private String hotelImageUrl;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private User hotelOwner;
-
-    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<UserOpinions> userOpinions;
 
-    @OneToMany(mappedBy = "belongingHotel", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<Room> rooms = new ArrayList<>();
+    @OneToMany(mappedBy = "belongingHotel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<Room> rooms;
 
     // Helper methods for bidirectional relationship
     public void addRoom(Room room) {

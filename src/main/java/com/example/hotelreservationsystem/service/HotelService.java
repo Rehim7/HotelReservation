@@ -6,6 +6,7 @@ import com.example.hotelreservationsystem.dto.request.UserOpininonRequest;
 import com.example.hotelreservationsystem.dto.response.HotelResponse;
 import com.example.hotelreservationsystem.dto.response.RoomResponse;
 import com.example.hotelreservationsystem.exceptions.HotelNotFoundException;
+import com.example.hotelreservationsystem.exceptions.RoomAlreadyExist;
 import com.example.hotelreservationsystem.model.Hotel;
 import com.example.hotelreservationsystem.model.Room;
 import com.example.hotelreservationsystem.model.User;
@@ -31,20 +32,22 @@ public class HotelService {
     private final UserOpininonsRepository userOpininonsRepository;
     private final MailService mailService;
     private final R2StorageService r2StorageService;
-
+    private final JwtService jwtService;
     private static final String Hotel_Data = "Hotel";
 
     public HotelService(HotelRepository hotelRepository, UserRepository userRepository,
-            UserOpininonsRepository userOpininonsRepository, MailService mailService,
-            R2StorageService r2StorageService) {
+                        UserOpininonsRepository userOpininonsRepository, MailService mailService,
+                        R2StorageService r2StorageService, JwtService jwtService) {
         this.hotelRepository = hotelRepository;
         this.userRepository = userRepository;
         this.userOpininonsRepository = userOpininonsRepository;
         this.mailService = mailService;
         this.r2StorageService = r2StorageService;
+        this.jwtService = jwtService;
     }
 
     @Transactional
+    @CacheEvict(value = Hotel_Data, allEntries = true)
     public HotelResponse createHotel(HotelRequest hotelRequest, MailRequest mailRequest) {
         Hotel hotel = new Hotel();
         hotel.setHotelName(hotelRequest.getHotelName());
@@ -56,16 +59,16 @@ public class HotelService {
         } catch (IOException e) {
             throw new RuntimeException("Şəkil URL-dən yüklənib R2-yə upload edilərkən xəta: " + e.getMessage(), e);
         }
-
-        hotel.setHotelStars(0);
+        hotel.setHotelStars(0.0);
         hotel.setHotelDescription(hotelRequest.getHotelDescription());
-        hotel.setHotelOwner(
-                userRepository.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName()));
-
         hotel.setUserOpinions(new ArrayList<>());
+        hotel.setRooms(new ArrayList<>());
         hotelRepository.save(hotel);
-
-        mailService.sendMail(mailRequest.getTo(), mailRequest.getSubject(), mailRequest.getBody());
+        try {
+            mailService.sendMail(mailRequest.getTo(), mailRequest.getSubject(), mailRequest.getBody());
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e.getMessage());
+        }
         return mapToResponse(hotel);
     }
 
@@ -80,11 +83,9 @@ public class HotelService {
     public List<HotelResponse> findAll() {
         List<Hotel> hotels = hotelRepository.findAll();
         List<HotelResponse> responses = new ArrayList<>();
-
         for (Hotel hotel : hotels) {
             responses.add(mapToResponse(hotel));
         }
-
         return responses;
     }
 
@@ -102,7 +103,6 @@ public class HotelService {
         hotelResponse.setHotelImageUrl(hotel.getHotelImageUrl());
         hotelResponse.setHotelStars(hotel.getHotelStars());
         hotelResponse.setHotelDescription(hotel.getHotelDescription());
-        hotelResponse.setHotelOwner(hotel.getHotelOwner() != null ? hotel.getHotelOwner().getUsername() : null);
 
         List<String> opinions = new ArrayList<>();
         if (hotel.getUserOpinions() != null) {
@@ -122,14 +122,14 @@ public class HotelService {
                 rr.setRoomStar(room.getRoomStar() != null ? room.getRoomStar() : 0.0);
                 rr.setReserved(room.isReserved());
                 rr.setRoomType(room.getRoomType());
-                rr.setBelongingHotelId(hotel.getId());
-                rr.setOwnerUserEmail(room.getOwnerUser() != null ? room.getOwnerUser().getEmail() : null);
-
-                List<String> roomOpinions = new ArrayList<>();
+                rr.setBelongingHotel(hotel.getHotelName ());
+                List<String> opinionTexts = new ArrayList<>();
                 if (room.getUserOpinions() != null) {
-                    room.getUserOpinions().forEach(op -> roomOpinions.add(op.getUserOpinions()));
+                    for (UserOpinions op : room.getUserOpinions()) {
+                        opinionTexts.add(op.getUserOpinions());
+                    }
                 }
-                rr.setUserOpinions(roomOpinions);
+                rr.setUserOpinions(opinionTexts);
                 roomResponses.add(rr);
             });
         }
@@ -143,13 +143,14 @@ public class HotelService {
     }
 
     @Transactional
-    public void userOpinionSetToHotel(Long hotelId, UserOpininonRequest request) {
+    public void userOpinionSetToHotel(Long hotelId, UserOpininonRequest request,String authHeader) {
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new HotelNotFoundException("Hotel not found with id: " + hotelId));
-        Optional<User> byId = userRepository.findById(request.getUserId());
+        String token = authHeader.substring(7);
+        Long l = jwtService.extractUserId(token);
         UserOpinions newOpinion = new UserOpinions();
         newOpinion.setUserOpinions(request.getUserOpinions());
-        newOpinion.setUser(byId.get());
+        newOpinion.setUserId(l);
         newOpinion.setRating(request.getRating());
 
         userOpininonsRepository.save(newOpinion);

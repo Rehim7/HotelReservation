@@ -11,6 +11,10 @@ public class CardGrpcClientService {
     @GrpcClient("cardService")
     private CardServiceGrpc.CardServiceBlockingStub cardServiceBlockingStub;
 
+    public CardResponse getCardByUserId(GetCardByUserIdRequest getCardByUserIdRequest) {
+        return cardServiceBlockingStub.getCardByUserId(getCardByUserIdRequest);
+    }
+
     public CardResponse createCard(CreateCardRequest createCardRequest) {
         return cardServiceBlockingStub.createCard(createCardRequest);
     }

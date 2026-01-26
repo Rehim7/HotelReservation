@@ -1,6 +1,9 @@
 package com.example.hotelreservationsystem.dto.response;
 
+import com.example.hotelreservationsystem.model.Hotel;
 import com.example.hotelreservationsystem.model.RoomType;
+import com.example.hotelreservationsystem.model.UserOpinions;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.List;
@@ -8,15 +11,13 @@ import java.util.List;
 @Data
 public class RoomResponse {
     private Long id;
-    private double price;
+    private Double price;
     private String description;
     private int roomNumber;
     private String roomView;
-    private double roomStar;
-    private boolean isReserved;
-
-    private List<String> userOpinions;
-    private Long belongingHotelId;
-    private String ownerUserEmail;
+    private Double roomStar = 0.0;
+    private boolean isReserved = false;
     private RoomType roomType;
+    private List<String> userOpinions;
+    private String belongingHotel;
 }

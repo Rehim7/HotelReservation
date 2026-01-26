@@ -20,7 +20,6 @@ public class RoomRequest {
     private int roomNumber;
     @NotBlank(message = "Room view required for users")
     private String roomView;
-    private boolean isReserved = false;
     @NotNull
     private Long belongingHotelId;
     @NotBlank

@@ -34,15 +34,15 @@ public class User implements UserDetails {
 
     private Long ticketId;
 
-    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<UserOpinions> userOpinions;
+//    @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+//    private List<UserOpinions> userOpinions;
+//
+//    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    private Hotel ownedHotel;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Hotel ownedHotel;
-
-
-    @OneToMany(targetEntity = Room.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<Room> rooms;
+//
+//    @OneToMany(targetEntity = Room.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+//    private List<Room> rooms;
 
 
 //    @OneToOne(targetEntity = Card.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)

@@ -9,7 +9,7 @@ spring:
 
   # --- Verilənlər Bazası ---
   datasource:
-    url: jdbc:postgresql://localhost:5432/hotelSystem
+    url: jdbc:postgresql://localhost:5432/hoteldb
     username: postgres
     password: ${DB_PASSWORD:52020278522}
     driver-class-name: org.postgresql.Driver

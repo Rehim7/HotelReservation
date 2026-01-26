@@ -30,6 +30,7 @@ public class RoomService {
     private final UserRepository userRepository;
     private final TicketService ticketService;
     private final HotelRepository hotelRepository;
+    private final JwtService jwtService;
     // private final CardService cardService;
     private final UserOpininonsRepository userOpininonsRepository;
     private final MailService mailService;
@@ -38,12 +39,13 @@ public class RoomService {
     private static final String Room_Data = "Room";
 
     public RoomService(RoomRepository repository, UserRepository userRepository, TicketService ticketService,
-            HotelRepository hotelRepository, UserOpininonsRepository userOpininonsRepository, MailService mailService,
-            R2StorageService r2StorageService) {
+                       HotelRepository hotelRepository, JwtService jwtService, UserOpininonsRepository userOpininonsRepository, MailService mailService,
+                       R2StorageService r2StorageService) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.ticketService = ticketService;
         this.hotelRepository = hotelRepository;
+        this.jwtService = jwtService;
         this.userOpininonsRepository = userOpininonsRepository;
         this.r2StorageService = r2StorageService;
 
@@ -51,13 +53,13 @@ public class RoomService {
     }
 
     @Transactional
-    public void userOpinionSetToRoom(Long roomId, UserOpininonRequest request) {
+    public void userOpinionSetToRoom(Long roomId, UserOpininonRequest request,String authHeader) {
         Room room = repository.findById(roomId).orElseThrow(() -> new RoomNotFound("Room not found"));
-        User users = (User) userRepository.findUserById(request.getUserId())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + request.getUserId()));
+        String token = authHeader.substring(7);
+        Long l = jwtService.extractUserId(token);
         UserOpinions newOpinion = new UserOpinions();
         newOpinion.setUserOpinions(request.getUserOpinions());
-        newOpinion.setUser(users);
+        newOpinion.setUserId(l);
         newOpinion.setRating(request.getRating());
         userOpininonsRepository.save(newOpinion);
         room.getUserOpinions().add(newOpinion);
@@ -83,11 +85,9 @@ public class RoomService {
 
     @Transactional
     public RoomResponse createRoom(RoomRequest roomRequest) {
-
         if (!repository.findByRoomNumber(roomRequest.getRoomNumber()).isEmpty()){
             throw new RoomAlreadyExist("Room number already exist");
         }
-
         Room room = new Room();
         room.setRoomNumber(roomRequest.getRoomNumber());
         String r2ImageUrl;
@@ -109,26 +109,16 @@ public class RoomService {
         room.setDescription(roomRequest.getDescription());
         room.setPrice(roomRequest.getPrice());
         room.setReserved(false);
-        room.setOwnerUser(null);
+        room.setRoomStar(0.0);
         room.setRoomType(roomRequest.getRoomType());
         room.setUserOpinions(new ArrayList<>());
+        room.setBelongingHotel(hotel);
         hotel.addRoom(room);
 
+        repository.save(room);
         hotelRepository.save(hotel);
 
-        RoomResponse roomResponse = new RoomResponse();
-        roomResponse.setId(room.getId());
-        roomResponse.setRoomType(room.getRoomType());
-        roomResponse.setRoomNumber(room.getRoomNumber());
-        roomResponse.setRoomView(room.getRoomView());
-        roomResponse.setDescription(room.getDescription());
-        roomResponse.setPrice(room.getPrice());
-        roomResponse.setReserved(false);
-        roomResponse.setRoomStar(room.getRoomStar() != null ? room.getRoomStar() : 0.0);
-        roomResponse.setUserOpinions(new ArrayList<>());
-        roomResponse.setOwnerUserEmail(null);
-        roomResponse.setBelongingHotelId(room.getBelongingHotel() != null ? room.getBelongingHotel().getId() : null);
-        return roomResponse;
+        return mapToResponse(room);
     }
 
     @Transactional
@@ -142,47 +132,10 @@ public class RoomService {
     public List<RoomResponse> findRoomByRoomNumber(int roomNumber) {
         List<Room> rooms = repository.findByRoomNumber(roomNumber);
         return rooms.stream()
-                .map(room -> {
-                    RoomResponse roomResponse = new RoomResponse();
-                    roomResponse.setId(room.getId());
-                    roomResponse.setRoomView(room.getRoomView());
-                    roomResponse.setPrice(room.getPrice());
-                    roomResponse.setRoomNumber(room.getRoomNumber());
-                    roomResponse.setRoomType(room.getRoomType());
-                    roomResponse.setReserved(room.isReserved());
-                    roomResponse.setRoomStar(room.getRoomStar() != null ? room.getRoomStar() : 0.0);
-                    roomResponse.setDescription(room.getDescription());
-                    roomResponse.setBelongingHotelId(
-                            room.getBelongingHotel() != null ? room.getBelongingHotel().getId() : null);
-                    roomResponse.setOwnerUserEmail(room.getOwnerUser() != null ? room.getOwnerUser().getEmail() : null);
-
-                    List<String> opinionTexts = new ArrayList<>();
-                    if (room.getUserOpinions() != null) {
-                        room.getUserOpinions().forEach(op -> opinionTexts.add(op.getUserOpinions()));
-                    }
-                    roomResponse.setUserOpinions(opinionTexts);
-
-                    return roomResponse;
-                })
+                .map(this::mapToResponse)
                 .toList();
     }
 
-    @Transactional
-    @CacheEvict(value = Room_Data, key = "#roomId")
-    public String uploadImageToRoom(Long roomId, MultipartFile file) throws IOException {
-        Room room = repository.findById(roomId)
-                .orElseThrow(() -> new RoomNotFound("Room not found with id: " + roomId));
-        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (room.getBelongingHotel() == null || room.getBelongingHotel().getHotelOwner() == null
-                || !Objects.equals(room.getBelongingHotel().getHotelOwner().getEmail(), currentUserEmail)) {
-            throw new AccessDeniedException("You do not have permission to upload an image for this room.");
-        }
-        String imageUrl = r2StorageService.uploadFile(file);
-        room.setRoomView(imageUrl);
-        repository.save(room);
-
-        return imageUrl;
-    }
 
     @Transactional(readOnly = true)
     public List<RoomResponse> findAllRoomsByHotel(Long hotelId) {
@@ -213,15 +166,16 @@ public class RoomService {
         roomResponse.setReserved(room.isReserved());
         roomResponse.setRoomStar(room.getRoomStar() != null ? room.getRoomStar() : 0.0);
         roomResponse.setDescription(room.getDescription());
-        roomResponse.setBelongingHotelId(room.getBelongingHotel() != null ? room.getBelongingHotel().getId() : null);
-        roomResponse.setOwnerUserEmail(room.getOwnerUser() != null ? room.getOwnerUser().getEmail() : null);
-
+        if (room.getBelongingHotel() != null) {
+            roomResponse.setBelongingHotel(room.getBelongingHotel().getHotelName());
+        }
         List<String> opinionTexts = new ArrayList<>();
         if (room.getUserOpinions() != null) {
-            room.getUserOpinions().forEach(op -> opinionTexts.add(op.getUserOpinions()));
+            for (UserOpinions op : room.getUserOpinions()) {
+                opinionTexts.add(op.getUserOpinions());
+            }
         }
         roomResponse.setUserOpinions(opinionTexts);
-
         return roomResponse;
     }
 
@@ -231,6 +185,22 @@ public class RoomService {
 
 // =========================================================================================================
 
+//    @Transactional
+//    @CacheEvict(value = Room_Data, key = "#roomId")
+//    public String uploadImageToRoom(Long roomId, MultipartFile file) throws IOException {
+//        Room room = repository.findById(roomId)
+//                .orElseThrow(() -> new RoomNotFound("Room not found with id: " + roomId));
+//        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+//        if (room.getBelongingHotel() == null || room.getBelongingHotel().ge() == null
+//                || !Objects.equals(room.getBelongingHotel().getHotelOwner().getEmail(), currentUserEmail)) {
+//            throw new AccessDeniedException("You do not have permission to upload an image for this room.");
+//        }
+//        String imageUrl = r2StorageService.uploadFile(file);
+//        room.setRoomView(imageUrl);
+//        repository.save(room);
+//
+//        return imageUrl;
+//    }
 // @Transactional
 // public void reserveRoom(Long cardId, TicketRequest ticketRequest, Long
 // roomNumber, MailRequest mailRequest) throws Exception {
@@ -315,3 +285,23 @@ public class RoomService {
 // })
 // .toList();
 // }
+
+//        RoomResponse roomResponse = new RoomResponse();
+//        roomResponse.setId(room.getId());
+//        roomResponse.setRoomType(room.getRoomType());
+//        roomResponse.setRoomNumber(room.getRoomNumber());
+//        roomResponse.setRoomView(room.getRoomView());
+//        roomResponse.setDescription(room.getDescription());
+//        roomResponse.setPrice(room.getPrice());
+//        roomResponse.setReserved(false);
+//        roomResponse.setRoomStar(0.0);
+//        List<String> opinionTexts = new ArrayList<>();
+//        if (room.getUserOpinions() != null) {
+//            for (UserOpinions op : room.getUserOpinions()) {
+//                opinionTexts.add(op.getUserOpinions());
+//            }
+//        }
+//
+//        Optional<Hotel> byId = hotelRepository.findById(roomRequest.getBelongingHotelId());
+//        roomResponse.setUserOpinions(opinionTexts);
+//        roomResponse.setBelongingHotel(byId.get().getHotelName());

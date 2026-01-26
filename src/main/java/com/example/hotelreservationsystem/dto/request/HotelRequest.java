@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data

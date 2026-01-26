@@ -14,5 +14,4 @@ public class HotelResponse {
 
     private List<String> userOpinions;
     private List<RoomResponse> rooms;
-    private String hotelOwner;
 }

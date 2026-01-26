@@ -5,12 +5,13 @@ import lombok.Data;
 
 @Data
 @Entity
+@Table(name = "hotel_user_opinions")
 public class UserOpinions {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private double rating;
     private String userOpinions;
 
-    @ManyToOne(targetEntity = User.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-    private User user;
+    private Long userId;
 }

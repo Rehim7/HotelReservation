@@ -9,13 +9,22 @@ option java_outer_classname = "CardProto";
 service CardService {
   rpc CreateCard (CreateCardRequest) returns (CardResponse);
   rpc GetCardById (GetCardByIdRequest) returns (CardResponse);
+
+  rpc GetCardByUserId (GetCardByUserIdRequest) returns (CardResponse);
+
   rpc DeleteCard (DeleteCardRequest) returns (DeleteCardResponse);
   rpc IncreaseCardBalance (IncreaseCardBalanceRequest) returns (CardResponse);
   rpc DecreaseCardBalance (DecreaseCardBalanceRequest) returns (CardResponse);
 }
-message GetCardByIdRequest{
+
+message GetCardByUserIdRequest {
+  int64 userId = 1;
+}
+
+message GetCardByIdRequest {
   int64 id = 1;
 }
+
 message CreateCardRequest {
   string cardNumber = 1;
   string expirationDate = 2;
@@ -41,11 +50,13 @@ message DeleteCardResponse {
 message DeleteCardRequest {
   int64 id = 1;
 }
+
 message IncreaseCardBalanceRequest {
   int64 id = 1;
   string cardNumber = 2;
   double amountToUpdate = 3;
 }
+
 message DecreaseCardBalanceRequest {
   int64 id = 1;
   string cardNumber = 2;
