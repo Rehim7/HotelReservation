@@ -41,6 +41,19 @@ public class GlobalExceptionHandler {
        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 
    }
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+        if (ex.getMessage().contains("Ödəniş xidməti")) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ex.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Daxili xəta baş verdi: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(io.github.resilience4j.circuitbreaker.CallNotPermittedException.class)
+    public ResponseEntity<String> handleCallNotPermittedException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Sistem çox sayda xəta aldığı üçün müvəqqəti olaraq bank servisinə müraciətləri dayandırıb.");
+    }
 
    @ExceptionHandler(SomethingWentWrong.class)
    public ResponseEntity<String> somethingWentWrongExceptionHandler(SomethingWentWrong e) {

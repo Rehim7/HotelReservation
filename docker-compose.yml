@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Verilənlər Bazası (PostgreSQL)
+  postgres-db:
+    image: postgres:15
+    container_name: hotel-postgres
+    environment:
+      POSTGRES_DB: hoteldb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-52020278522}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Keşləmə (Redis)
+  redis-cache:
+    image: redis:7-alpine
+    container_name: hotel-redis
+    ports:
+      - "6379:6379"
+
+  # Sizin Spring Boot tətbiqiniz
+  app:
+    build: .
+    container_name: hotel-reservation-app
+    ports:
+      - "8080:8080"
+      - "9091:9091"
+    depends_on:
+      - postgres-db
+      - redis-cache
+    environment:
+      # YAML-dakı hostları docker daxili şəbəkə adları ilə əvəz edirik
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/hoteldb
+      SPRING_DATA_REDIS_HOST: redis-cache
+      # Şifrələri environment variable kimi ötürmək daha təhlükəsizdir
+      DB_PASSWORD: ${DB_PASSWORD:-52020278522}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-gcdhrftkpkegyxxr}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+
+volumes:
+  postgres_data:

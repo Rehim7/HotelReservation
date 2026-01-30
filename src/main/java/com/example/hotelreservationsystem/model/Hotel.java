@@ -27,6 +27,7 @@ public class Hotel {
     private String hotelImageUrl;
 
     @OneToMany(targetEntity = UserOpinions.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinTable(name = "hotel_all_user_opinions", joinColumns = @JoinColumn(name = "hotel_id"), inverseJoinColumns = @JoinColumn(name = "user_opinions_id"))
     private List<UserOpinions> userOpinions;
 
     @OneToMany(mappedBy = "belongingHotel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

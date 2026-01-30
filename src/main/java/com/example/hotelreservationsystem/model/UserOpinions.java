@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "hotel_user_opinions")
+@Table(name = "all_user_opinions")
 public class UserOpinions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

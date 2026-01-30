@@ -24,7 +24,6 @@ public class TicketController {
     public ResponseEntity<TicketResponse> buyTicket(
             @Valid @RequestBody TicketRequest ticketRequest,
             @RequestHeader("Authorization") String authHeader) {
-        // Token authHeader olaraq servisə ötürülür, id-ni servis çıxarır
         return ResponseEntity.ok(ticketService.buyTicket(ticketRequest, authHeader));
     }
 
